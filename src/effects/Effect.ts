@@ -1,0 +1,47 @@
+export interface StyleProperty {
+  property: string;
+  value: string;
+}
+
+export interface EffectContext {
+  imageWidth: number;
+  imageHeight: number;
+  textContent: string;
+  fontFamily: string;
+  shared: {
+    imageFiles: string[];
+    textData?: TextData;
+    bgData?: {
+      hasBgImg: boolean;
+      bgColor?: [string] | [string, string];
+    };
+  };
+}
+export interface TextData {
+  hasPattern?: boolean;
+  textColor?: string;
+  strokeColor?: string;
+}
+
+export abstract class Effect {
+  abstract name: string;
+  protected occurrenceProbability: number; // 0.0 to 1.0
+
+  constructor(occurrenceProbability = 0.5) {
+    this.occurrenceProbability = occurrenceProbability;
+  }
+
+  /**
+   * Determines if the effect should be applied based on its probability.
+   */
+  shouldApply(): boolean {
+    return Math.random() < this.occurrenceProbability;
+  }
+
+  /**
+   * Returns an array of CSS StyleProperty objects or null if the effect shouldn't be applied
+   * or doesn't generate any styles.
+   * @param context - Contextual information that might be needed for style generation.
+   */
+  abstract getCss(context: EffectContext): StyleProperty[] | null;
+}
