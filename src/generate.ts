@@ -31,25 +31,40 @@ const imageFiles = fs.existsSync(IMAGE_DIR)
   : [];
 
 // Image dimensions
-const MIN_WIDTH = 220;
+const MIN_WIDTH = 260;
 const MAX_WIDTH = 1200;
-const MIN_HEIGHT = 67;
-const MAX_HEIGHT = 650;
-const MIN_QUALITY = 45;
+const MIN_HEIGHT = 70;
+const MAX_HEIGHT = 500;
+const MIN_QUALITY = 50;
 const MAX_QUALITY = 95;
-const availableEffects: Effect[] = [
-  new TextColorEffect(1),
-  new BackgroundColorEffect(0.9),
-  // new BackgroundImageEffect(0.7), // Lower probability for BG images
-  // new FontStyleEffect(0.2),
-  // new TextShadowEffect(0.3),
-  // ! new BlurEffect(0.1),
+const MIN_FONT_SIZE = 50;
+const MAX_FONT_SIZE = 120;
+
+// ! don't mess with the order of Effects placed in each effect array
+const backgroundEffects: Effect[] = [
+  new BackgroundColorEffect(1),
+  new BackgroundImageEffect(0.5),
+];
+
+// picks a contrasting color based on ctx.bgColor
+const textEffects: Effect[] = [
+  new TextColorEffect(1.0),
+  new FontStyleEffect(0.2),
+];
+
+const postTextEffects: Effect[] = [
   // new StrokeEffect(0.5),
   new StrokeEffect(1),
+  // new TextShadowEffect(0.3),
   new RotationEffect(0.6),
   new TransformEffect(0.4),
 ];
 
+const availableEffects = [
+  ...backgroundEffects,
+  ...textEffects,
+  ...postTextEffects,
+];
 interface ImageOptions {
   width: number;
   height: number;
@@ -87,14 +102,14 @@ async function generateImage(
 
     for (const effect of availableEffects) {
       if (effect.shouldApply()) {
-        const cssProps = effect.getCss(effectContext);
+        const cssProps = await effect.getCss(effectContext);
         if (cssProps) {
           activeStyles.push(...cssProps);
         }
       }
     }
 
-    let defaultFontSizePx = getRandomInt(36, 96);
+    let defaultFontSizePx = getRandomInt(MIN_FONT_SIZE, MAX_FONT_SIZE);
 
     const bodyStyles = activeStyles
       .filter((s) => s.property.startsWith("background"))
@@ -112,9 +127,7 @@ async function generateImage(
           <style>
             @font-face {
               font-family: "${font.name}";
-              src: url(data:font/${font.extension};base64,${
-        font.base64Content
-      });
+              src: url(data:font/${font.extension};base64,${font.base64Content});
             }
             body {
               margin: 0;
@@ -136,7 +149,6 @@ async function generateImage(
               box-sizing: border-box;
               position: relative; 
               ${textSpecificStyles}
-              /* transform: rotate(${getRandomInt(-5, 5)}deg); */
             }
           </style>
         </head>
@@ -177,15 +189,14 @@ async function generateImage(
   }
 }
 
-//*-----------------------/main\----------------------------*\\
-async function main() {
-  console.log("Starting text image generator... 📝✨");
+// ??????????????? ???????????????????? ?????????????????????
 
+(async function () {
+  console.log("Starting text image generator... 📝✨");
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
-
-  const fontFiles = getFontFiles(FONT_DIR);
+  const fontFiles = getFontFamilies(FONT_DIR);
   if (fontFiles.length === 0) {
     console.error(
       `No font files found in ${FONT_DIR}. Please add some .ttf, .otf, .woff, or .woff2 files.`
@@ -193,8 +204,8 @@ async function main() {
     return;
   }
   console.log(
-    `Found ${fontFiles.length} font(s): ${fontFiles
-      .map((f) => f.name)
+    `Found ${fontFiles.length} font families: ${fontFiles
+      .map((f) => f.fontName)
       .join(", ")}`
   );
 
@@ -207,84 +218,6 @@ async function main() {
   }
   console.log(`Loaded ${sentences.length} sentences.`);
 
-  const fontsWithContent = await Promise.all(
-    fontFiles.map(async (font) => {
-      const fileBuffer = await fs.promises.readFile(font.path);
-      return { ...font, base64Content: fileBuffer.toString("base64") };
-    })
-  );
-
-  let browser: Browser | null = null;
-  try {
-    console.log("Launching Puppeteer browser... 🌐");
-    browser = await puppeteer.launch({
-      headless: true, // "new" is default, can be true for older versions
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--font-render-hinting=none",
-      ],
-    });
-    const page = await browser.newPage(); // Create one page and reuse it
-
-    for (const font of fontsWithContent) {
-      console.log(`\nProcessing font: "${font.name}"...`);
-      const fontOutputDir = path.join(OUTPUT_DIR, font.name);
-      if (!fs.existsSync(fontOutputDir)) {
-        fs.mkdirSync(fontOutputDir, { recursive: true });
-      }
-
-      for (let i = 0; i < IMAGES_PER_FONT; i++) {
-        const sentence = getRandomElement(sentences);
-        if (!sentence) continue;
-
-        const imageOptions: ImageOptions = {
-          height: getRandomInt(MIN_HEIGHT, MAX_HEIGHT),
-          width: getRandomInt(MIN_WIDTH, MAX_WIDTH),
-          quality: getRandomInt(MIN_QUALITY, MAX_QUALITY),
-        };
-        await generateImage(page, sentence, imageOptions, font, i);
-      }
-      console.log(
-        `✅ Finished processing font: "${font.name}". Generated ${IMAGES_PER_FONT} images.`
-      );
-    }
-    await page.close();
-  } catch (error) {
-    console.error("An error occurred during the generation process:", error);
-  } finally {
-    if (browser) {
-      console.log("\nClosing Puppeteer browser... 👋");
-      await browser.close();
-    }
-  }
-  console.log("\n🎉 All done! Images generated in the 'output' directory.");
-}
-
-// main().catch(console.error);
-
-// ??????????????? Testing and fucking around ?????????????????????
-
-(async function () {
-  const fontFiles = getFontFamilies(FONT_DIR);
-
-  // Progress bars setup
-  // const fontsBar = new cliProgress.SingleBar({
-  //   format:
-  //     "Fonts |{bar}| {duration_formatted} has passed! ETA: {eta}s | {value}/{total} Fonts --> {fontName}",
-  //   barCompleteChar: "\u2588",
-  //   barIncompleteChar: "\u2591",
-  //   hideCursor: true,
-  // });
-  // const imagesBar = new cliProgress.SingleBar({
-  //   format:
-  //     "  Images |{bar}| {percentage}% | {value}/{total} Images - image {imageName} created!",
-  //   barCompleteChar: "\u2588",
-  //   barIncompleteChar: "\u2591",
-  //   hideCursor: true,
-  //   clearOnComplete: true,
-  // });
   const multiBar = new cliProgress.MultiBar(
     {
       hideCursor: true,
@@ -297,65 +230,70 @@ async function main() {
     process.exit();
   });
 
-  const browser = await puppeteer.launch({
-    // headless: false,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--font-render-hinting=none",
-    ],
-  });
-  const page = await browser.newPage();
-
-  // for (let fontIndex = 0; fontIndex < fontFiles.length; fontIndex++) {
-  const fontsBar = multiBar.create(
-    fontFiles.length,
-    0,
-    { name: " ... " },
-    {
-      barsize: 50,
-      format:
-        " {bar} | {name} | {value}/{total} | {duration_formatted} has passed! ETA: {eta}s",
-    }
-  );
-
-  for (let fontIndex = 0; fontIndex < 1; fontIndex++) {
-    const font = fontFiles[fontIndex];
-    fontsBar.increment(undefined, { name: font.fontName });
-
-    const imagesBar = multiBar.create(IMAGES_PER_FONT, 0, undefined, {
-      clearOnComplete: true,
-      barsize: 30,
-      stopOnComplete: true,
-      format: " {bar} | {value}/{total} | {name}",
+  try {
+    console.log("Launching Puppeteer browser... 🌐");
+    const browser = await puppeteer.launch({
+      // headless: false,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--font-render-hinting=none",
+      ],
     });
-    for (let index = 0; index < IMAGES_PER_FONT; index++) {
-      const imageOptions: ImageOptions = {
-        height: getRandomInt(MIN_HEIGHT, MAX_HEIGHT),
-        width: getRandomInt(MIN_WIDTH, MAX_WIDTH),
-        quality: getRandomInt(MIN_QUALITY, MAX_QUALITY),
-      };
-      const randomFontFile = getRandomElement(font.files);
-      const fileBuffer = await fs.promises.readFile(randomFontFile.path);
-      const fontData = {
-        name: font.fontName,
-        extension: randomFontFile.extension,
-        base64Content: fileBuffer.toString("base64"),
-      };
+    const page = await browser.newPage();
 
-      const result = await generateImage(
-        page,
-        "سلام این یک متن تستی میباشد!",
-        imageOptions,
-        fontData,
-        index
-      );
-      imagesBar.increment(undefined, { name: result });
+    const fontsBar = multiBar.create(
+      fontFiles.length,
+      0,
+      { name: " ... " },
+      {
+        barsize: 50,
+        format:
+          " {bar} | {name} | {value}/{total} | {duration_formatted} has passed! ETA: {eta}s",
+      }
+    );
+
+    for (let fontIndex = 0; fontIndex < 2; fontIndex++) {
+      const font = fontFiles[fontIndex];
+      fontsBar.increment(undefined, { name: font.fontName });
+
+      const imagesBar = multiBar.create(IMAGES_PER_FONT, 0, undefined, {
+        clearOnComplete: true,
+        barsize: 30,
+        stopOnComplete: true,
+        format: " {bar} | {value}/{total} | {name}",
+      });
+      for (let index = 0; index < IMAGES_PER_FONT; index++) {
+        const imageOptions: ImageOptions = {
+          height: getRandomInt(MIN_HEIGHT, MAX_HEIGHT),
+          width: getRandomInt(MIN_WIDTH, MAX_WIDTH),
+          quality: getRandomInt(MIN_QUALITY, MAX_QUALITY),
+        };
+        const randomFontFile = getRandomElement(font.files);
+        const fileBuffer = await fs.promises.readFile(randomFontFile.path);
+        const fontData = {
+          name: font.fontName,
+          extension: randomFontFile.extension,
+          base64Content: fileBuffer.toString("base64"),
+        };
+
+        const result = await generateImage(
+          page,
+          getRandomElement(sentences),
+          imageOptions,
+          fontData,
+          index
+        );
+        imagesBar.increment(undefined, { name: result });
+      }
+
+      multiBar.remove(imagesBar);
     }
-
-    multiBar.remove(imagesBar);
+    multiBar.stop();
+    await browser.close();
+    console.log("\n🎉 All done! Images generated in the 'output' directory.");
+  } catch (error) {
+    console.error("An error occurred during the generation process:", error);
   }
-  multiBar.stop();
-  await browser.close();
 })();

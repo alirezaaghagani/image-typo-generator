@@ -1,5 +1,11 @@
 import { Effect, StyleProperty, EffectContext } from "./Effect";
-import { getRandomHexColor, getRandomInt } from "../utils";
+import {
+  getComplementaryColor,
+  getFamilyColor,
+  getRandomHexColor,
+  getRandomInt,
+} from "../utils";
+import { match } from "assert";
 
 export class StrokeEffect extends Effect {
   name = "Stroke";
@@ -9,9 +15,11 @@ export class StrokeEffect extends Effect {
   }
 
   getCss(context: EffectContext): StyleProperty[] | null {
-    if (!this.shouldApply()) return null;
+    const textColor = context.shared.textColor || "#000000";
     const strokeSize = (Math.random() + 0.4) * 4 - 0.8;
-    const strokeColor = getRandomHexColor();
+    const amountOfShiftingColor =
+      Math.random() < 0.5 ? getRandomInt(-160, -40) : getRandomInt(40, 140);
+    const strokeColor = getFamilyColor(textColor, amountOfShiftingColor);
 
     let textShadow = "";
     for (var angle = 0; angle < 2 * Math.PI; angle += 1 / strokeSize) {

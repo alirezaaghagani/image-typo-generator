@@ -11,7 +11,7 @@ export class RotationEffect extends Effect {
   getCss(context: EffectContext): StyleProperty[] | null {
     if (!this.shouldApply()) return null;
 
-    const angle = (Math.random() - 0.5) * 5;
+    const angle = (Math.random() - 0.5) * 14;
 
     return [{ property: "rotate", value: `${angle}deg` }];
   }

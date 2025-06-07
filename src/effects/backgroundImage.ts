@@ -15,8 +15,6 @@ export class BackgroundImageEffect extends Effect {
   }
 
   getCss(context: EffectContext): StyleProperty[] | null {
-    if (!this.shouldApply()) return null;
-
     // Get image files from context
     const imageFiles: string[] = context.shared?.imageFiles || [];
 
@@ -33,12 +31,9 @@ export class BackgroundImageEffect extends Effect {
         property: "background-size",
         value: "cover",
       },
-      // {
-      //   property: "background-size",
-      //   value: getRandomElement(["cover", "contain"]),
-      // },
-      // { property: "background-repeat", value: "no-repeat" },
     ];
+    context.shared.backgroundType = "image";
+    context.shared.backgroundImageUrl = randomImage;
 
     return backgroundStyles;
   }

@@ -1,5 +1,13 @@
 import { Effect, StyleProperty, EffectContext } from "./Effect";
-import { getComplementaryColor, getRandomHexColor } from "../utils";
+import {
+  getComplementaryColor,
+  getRandomHexColor,
+  getReadableTextColorFromTopColors,
+  getTopColors,
+} from "../utils";
+import { join } from "path";
+
+const IMAGE_DIR = join(process.cwd(), "assets", "images");
 
 // 1. common colors with weights
 const commonColors = [
@@ -54,16 +62,26 @@ export class TextColorEffect extends Effect {
     super(occurrenceProbability);
   }
 
-  getCss(context: EffectContext): StyleProperty[] | null {
-    if (!this.shouldApply() || context.shared.textData?.hasPattern) return null;
-
-    let color = getWeightedRandomColor();
-    if (Math.random() < 0.3) {
-      // 30% chance to pick a random hex color
-      color = getRandomHexColor();
+  async getCss(context: EffectContext): Promise<StyleProperty[] | null> {
+    let color: string;
+    switch (context.shared.backgroundType) {
+      case "image":
+        const imagePath = join(IMAGE_DIR, context.shared.backgroundImageUrl!);
+        const topColors = await getTopColors(imagePath, 3);
+        color = getReadableTextColorFromTopColors(topColors);
+        break;
+      case "color":
+      default:
+        const bgColor = context.shared.backgroundColor || "#fff";
+        color = getComplementaryColor(bgColor);
+        if (Math.random() < 0.15) {
+          // 30% chance to pick a random hex color
+          // ? color = getWeightedRandomColor();
+        }
+        break;
     }
 
-    context.shared.textData = { hasPattern: false, textColor: color };
+    context.shared.textColor = color;
     return [{ property: "color", value: color }];
   }
 }

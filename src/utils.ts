@@ -1,4 +1,5 @@
 import fs from "fs";
+import { Vibrant } from "node-vibrant/node";
 import path from "path";
 
 /**
@@ -57,7 +58,7 @@ export function getComplementaryColor(hex: string): string {
 /**
  * Slightly adjust the lightness of a hex color to get a "family" color.
  */
-export function getFamilyColor(hex: string, amount = 20): string {
+export function getFamilyColor(hex: string, amount = 30): string {
   let color = hex.replace("#", "");
   if (color.length === 3)
     color = color
@@ -68,10 +69,10 @@ export function getFamilyColor(hex: string, amount = 20): string {
   let g = parseInt(color.substring(2, 4), 16);
   let b = parseInt(color.substring(4, 6), 16);
 
-  // Increase lightness by amount (clamp to 255)
-  r = Math.min(255, r + amount);
-  g = Math.min(255, g + amount);
-  b = Math.min(255, b + amount);
+  // Increase lightness by amount (wrap around at 256)
+  r = (r + amount) % 256;
+  g = (g + amount) % 256;
+  b = (b + amount) % 256;
 
   return "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
@@ -240,4 +241,66 @@ export function getAnalogousColor(
   h /= 360;
   const rgb = hslToRgb(h, s, l);
   return rgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+export async function getTopColors(
+  imagePath: string,
+  count: number = 3
+): Promise<string[]> {
+  const palette = await Vibrant.from(imagePath).getPalette();
+  const swatches = Object.values(palette)
+    .filter((swatch) => swatch !== null)
+    .sort((a, b) => (b?.population || 0) - (a?.population || 0))
+    .slice(0, count);
+
+  return swatches.map((swatch) => swatch!.hex);
+}
+
+// Returns a single hex color for text, given an array of 3 top hex colors from an image.
+export function getReadableTextColorFromTopColors(topColors: string[]): string {
+  // Helper to parse hex to RGB
+  function hexToRgb(hex: string) {
+    const n = hex.replace("#", "");
+    return [
+      parseInt(n.substring(0, 2), 16),
+      parseInt(n.substring(2, 4), 16),
+      parseInt(n.substring(4, 6), 16),
+    ];
+  }
+  // Helper to convert RGB to hex
+  function rgbToHex([r, g, b]: number[]) {
+    return (
+      "#" +
+      r.toString(16).padStart(2, "0") +
+      g.toString(16).padStart(2, "0") +
+      b.toString(16).padStart(2, "0")
+    );
+  }
+  // Average the RGB values
+  const avg = [0, 1, 2].map((i) =>
+    Math.round(
+      (hexToRgb(topColors[0])[i] +
+        hexToRgb(topColors[1])[i] +
+        hexToRgb(topColors[2])[i]) /
+        3
+    )
+  );
+  // Get complementary color
+  const comp = avg.map((v) => 255 - v);
+  const compHex = rgbToHex(comp);
+  // Check brightness for fallback
+  const brightness = (avg[0] * 299 + avg[1] * 587 + avg[2] * 114) / 1000;
+  // If complementary color is too close to any top color, fallback to black/white
+  const isTooClose = topColors.some((c) => {
+    const rgb = hexToRgb(c);
+    return (
+      Math.abs(rgb[0] - comp[0]) < 32 &&
+      Math.abs(rgb[1] - comp[1]) < 32 &&
+      Math.abs(rgb[2] - comp[2]) < 32
+    );
+  });
+  if (isTooClose) {
+    return brightness > 128 ? "#000000" : "#FFFFFF";
+  }
+  return compHex;
 }

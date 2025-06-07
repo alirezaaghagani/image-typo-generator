@@ -10,17 +10,11 @@ export interface EffectContext {
   fontFamily: string;
   shared: {
     imageFiles: string[];
-    textData?: TextData;
-    bgData?: {
-      hasBgImg: boolean;
-      bgColor?: [string] | [string, string];
-    };
+    textColor?: string;
+    backgroundImageUrl?: string;
+    backgroundColor?: string;
+    backgroundType?: "color" | "image";
   };
-}
-export interface TextData {
-  hasPattern?: boolean;
-  textColor?: string;
-  strokeColor?: string;
 }
 
 export abstract class Effect {
@@ -43,5 +37,7 @@ export abstract class Effect {
    * or doesn't generate any styles.
    * @param context - Contextual information that might be needed for style generation.
    */
-  abstract getCss(context: EffectContext): StyleProperty[] | null;
+  abstract getCss(
+    context: EffectContext
+  ): Promise<StyleProperty[] | null> | StyleProperty[] | null;
 }
