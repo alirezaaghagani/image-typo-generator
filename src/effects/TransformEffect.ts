@@ -1,5 +1,5 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
-import { getRandomInt } from "../utils";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
+import { getRandomInt } from "../utils.js";
 
 export class TransformEffect extends Effect {
   name = "Transform";

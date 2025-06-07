@@ -1,20 +1,34 @@
+// {
+//   "compilerOptions": {
+//     "lib": ["ESNext"],
+//     "module": "esnext",
+//     "target": "esnext",
+//     "moduleResolution": "node",
+//     "moduleDetection": "force",
+//     // "allowImportingTsExtensions": true,
+//     // "noEmit": true,
+//     "composite": true,
+//     "strict": true,
+//     "downlevelIteration": true,
+//     "skipLibCheck": true,
+//     "allowSyntheticDefaultImports": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "allowJs": true,
+//     "types": ["bun-types"]
+//   },
+//   "include": ["src"]
+// }
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
-    "module": "esnext",
-    "target": "esnext",
-    "moduleResolution": "bundler",
-    "moduleDetection": "force",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "composite": true,
-    "strict": true,
-    "downlevelIteration": true,
-    "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "allowSyntheticDefaultImports": true,
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
-    "types": ["bun-types"]
-  }
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
 }

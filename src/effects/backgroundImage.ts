@@ -1,5 +1,5 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
-import { getRandomInt, getRandomElement, getRandomFloat } from "../utils";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
+import { getRandomInt, getRandomElement, getRandomFloat } from "../utils.js";
 import path from "path";
 
 // For this effect to work well, you'd need a source of background images.

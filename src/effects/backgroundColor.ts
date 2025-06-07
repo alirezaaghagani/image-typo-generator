@@ -1,4 +1,4 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
 import {
   getRandomHexColor,
   getRandomInt,
@@ -6,7 +6,7 @@ import {
   getComplementaryColor,
   getFamilyColor,
   getAnalogousColor,
-} from "../utils";
+} from "../utils.js";
 
 export class BackgroundColorEffect extends Effect {
   name = "BackgroundColor";

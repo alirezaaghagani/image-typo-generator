@@ -1,10 +1,10 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
 import {
   getComplementaryColor,
   getRandomHexColor,
   getReadableTextColorFromTopColors,
   getTopColors,
-} from "../utils";
+} from "../utils.js";
 import { join } from "path";
 
 const IMAGE_DIR = join(process.cwd(), "assets", "images");
@@ -82,6 +82,7 @@ export class TextColorEffect extends Effect {
     }
 
     context.shared.textColor = color;
+
     return [{ property: "color", value: color }];
   }
 }

@@ -1,5 +1,5 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
-import { getRandomInt, getRandomHexColor, getRandomFloat } from "../utils";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
+import { getRandomInt, getRandomHexColor, getRandomFloat } from "../utils.js";
 
 export class TextShadowEffect extends Effect {
   name = "TextShadow";

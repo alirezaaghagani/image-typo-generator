@@ -37,3 +37,4 @@ assets/fonts
 assets/images
 output
 sentences.txt
+*.log

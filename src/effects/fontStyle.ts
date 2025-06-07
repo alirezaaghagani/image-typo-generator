@@ -1,5 +1,5 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
-import { getRandomElement } from "../utils";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
+import { getRandomElement } from "../utils.js";
 
 export class FontStyleEffect extends Effect {
   name = "FontStyle";

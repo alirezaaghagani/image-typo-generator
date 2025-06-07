@@ -6,7 +6,6 @@ export interface StyleProperty {
 export interface EffectContext {
   imageWidth: number;
   imageHeight: number;
-  textContent: string;
   fontFamily: string;
   shared: {
     imageFiles: string[];

@@ -1,11 +1,10 @@
-import { Effect, StyleProperty, EffectContext } from "./Effect";
+import { Effect, StyleProperty, EffectContext } from "./Effect.js";
 import {
   getComplementaryColor,
   getFamilyColor,
   getRandomHexColor,
   getRandomInt,
-} from "../utils";
-import { match } from "assert";
+} from "../utils.js";
 
 export class StrokeEffect extends Effect {
   name = "Stroke";
