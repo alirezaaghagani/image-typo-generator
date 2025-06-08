@@ -108,7 +108,6 @@ import { generateImage, ImageOptions } from "./generateImage.js";
         format: " {bar} | {value}/{total} | {name}",
       });
       // ********************************************************************
-      /*
       const imagePromises = Array.from(
         { length: config.IMAGES_PER_FONT },
         (_, index) =>
@@ -142,9 +141,9 @@ import { generateImage, ImageOptions } from "./generateImage.js";
           })
       );
       await Promise.all(imagePromises);
-*/
-      // ***************************************************
 
+      // ***************************************************
+      /*
       const page = pagePool[0];
       for (let index = 0; index < config.IMAGES_PER_FONT; index++) {
         const imageOptions: ImageOptions = {
@@ -170,7 +169,7 @@ import { generateImage, ImageOptions } from "./generateImage.js";
         // console.timeEnd(`generateImage ${index}`);
         imagesBar.increment(undefined, { name: result });
       }
-
+*/
       multiBar.remove(imagesBar as SingleBar);
     }
     multiBar.stop();
@@ -184,7 +183,6 @@ import { generateImage, ImageOptions } from "./generateImage.js";
     console.error("An error occurred during the generation process:", error);
   }
 })();
-
 /*
 (async function () {
   const fontFiles = getFontFamilies(config.FONT_DIR);
@@ -226,4 +224,5 @@ import { generateImage, ImageOptions } from "./generateImage.js";
     1
   );
 })();
+
 */
