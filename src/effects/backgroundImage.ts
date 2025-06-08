@@ -24,6 +24,7 @@ export class BackgroundImageEffect extends Effect {
     const randomImage = getRandomElement(imageFiles);
     // Use a relative path for browser (assuming assets/images is public)
     const imageUrl = `http://localhost:3000/${randomImage}`;
+    // const imageUrl = `http://localhost:3000/photo-1552847883-d6001a3a97c4.jpg`;
 
     const backgroundStyles: StyleProperty[] = [
       { property: "background-image", value: `url('${imageUrl}')` },
@@ -34,6 +35,7 @@ export class BackgroundImageEffect extends Effect {
     ];
     context.shared.backgroundType = "image";
     context.shared.backgroundImageUrl = randomImage;
+    // context.shared.backgroundImageUrl = "photo-1552847883-d6001a3a97c4.jpg";
 
     return backgroundStyles;
   }

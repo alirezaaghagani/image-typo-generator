@@ -12,7 +12,7 @@ import { TransformEffect } from "./effects/TransformEffect.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const config = {
   PROGRESS_BAR: true,
-  CONCURRENT_TABS: 4,
+  CONCURRENT_TABS: 6,
   IMAGES_PER_FONT: 100,
   MIN_WIDTH: 260,
   MAX_WIDTH: 1200,
@@ -30,6 +30,7 @@ export const config = {
   backgroundEffects: [
     new BackgroundColorEffect(1),
     new BackgroundImageEffect(0.7),
+    // new BackgroundImageEffect(1),
   ],
   // picks a contrasting color based on ctx.bgColor
   textEffects: [new TextColorEffect(1.0), new FontStyleEffect(0.2)],
@@ -38,7 +39,7 @@ export const config = {
     // new StrokeEffect(1),
     new TextShadowEffect(0.3),
     new RotationEffect(0.6),
-    new TransformEffect(0.4),
+    // new TransformEffect(0.4),
   ],
   specialChars: [
     "۰",
@@ -56,20 +57,11 @@ export const config = {
     "؟",
     "«",
     "»",
-    "‹",
-    "›",
     "!",
-    "(",
-    ")",
     ";",
     ":",
     "'",
     '"',
     ",",
-    ".",
-    "،",
-    "ٕ",
-    "ٍ",
-    "ِ",
   ],
 };

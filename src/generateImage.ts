@@ -106,7 +106,7 @@ export async function generateImage(
               word-break: break-word;
               box-sizing: border-box;
               position: relative; 
-              line-height: 1.15;
+              line-height: 1.2;
               ${textSpecificStyles}
             }
           </style>
@@ -121,17 +121,24 @@ export async function generateImage(
     if (!fs.existsSync(fontOutputDir)) {
       fs.mkdirSync(fontOutputDir, { recursive: true });
     }
-    // const textRect = await page.evaluate(() => {
-    //   const el = document.getElementById("textContainer");
-    //   const rect = el!.getBoundingClientRect();
-    //   return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-    // });
+    const textRect = await page.evaluate(() => {
+      const el = document.getElementById("textContainer");
+      const rect = el!.getBoundingClientRect();
+      return {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      };
+    });
+
     // ? console.time(`screenshot ${imageIndex}`);
     await page.screenshot({
       path: `${fontOutputDir}/image_${imageIndex + 1}.jpeg`,
       type: "jpeg",
       quality: imageQuality,
-      // clip: textRect,
+      optimizeForSpeed: true,
+      //   clip: textRect,
     });
     // console.timeEnd(`screenshot ${imageIndex}`);
 

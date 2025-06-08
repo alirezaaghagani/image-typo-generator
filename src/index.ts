@@ -96,8 +96,8 @@ import { generateImage, ImageOptions } from "./generateImage.js";
     }
     let pageIndex = 0;
 
-    // TODO: for (let fontIndex = 0; fontIndex < fontFiles.length; fontIndex++) {
-    for (let fontIndex = 0; fontIndex < 1; fontIndex++) {
+    for (let fontIndex = 0; fontIndex < fontFiles.length; fontIndex++) {
+      // for (let fontIndex = 0; fontIndex < 1; fontIndex++) {
       const font = fontFiles[fontIndex];
       fontsBar.increment(undefined, { name: font.fontName });
 
@@ -107,7 +107,8 @@ import { generateImage, ImageOptions } from "./generateImage.js";
         stopOnComplete: true,
         format: " {bar} | {value}/{total} | {name}",
       });
-
+      // ********************************************************************
+      /*
       const imagePromises = Array.from(
         { length: config.IMAGES_PER_FONT },
         (_, index) =>
@@ -141,6 +142,35 @@ import { generateImage, ImageOptions } from "./generateImage.js";
           })
       );
       await Promise.all(imagePromises);
+*/
+      // ***************************************************
+
+      const page = pagePool[0];
+      for (let index = 0; index < config.IMAGES_PER_FONT; index++) {
+        const imageOptions: ImageOptions = {
+          height: getRandomInt(config.MIN_HEIGHT, config.MAX_HEIGHT),
+          width: getRandomInt(config.MIN_WIDTH, config.MAX_WIDTH),
+          quality: getRandomInt(config.MIN_QUALITY, config.MAX_QUALITY),
+        };
+        const randomFontFile = getRandomElement(font.files);
+        const fileBuffer = await fs.promises.readFile(randomFontFile.path);
+        const fontData = {
+          name: font.fontName,
+          extension: randomFontFile.extension,
+          base64Content: fileBuffer.toString("base64"),
+        };
+        // console.time(`generateImage ${index}`);
+        const result = await generateImage(
+          page,
+          getRandomElement(sentences),
+          imageOptions,
+          fontData,
+          index
+        );
+        // console.timeEnd(`generateImage ${index}`);
+        imagesBar.increment(undefined, { name: result });
+      }
+
       multiBar.remove(imagesBar as SingleBar);
     }
     multiBar.stop();
@@ -154,3 +184,46 @@ import { generateImage, ImageOptions } from "./generateImage.js";
     console.error("An error occurred during the generation process:", error);
   }
 })();
+
+/*
+(async function () {
+  const fontFiles = getFontFamilies(config.FONT_DIR);
+  const font = fontFiles[0];
+  const browser = await puppeteer.launch({
+    headless: false,
+    // headless: "shell",
+    args: [
+      "--disable-features=CalculateNativeWinOcclusion",
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-background-timer-throttling",
+      "--font-render-hinting=none",
+      "--disable-gpu",
+      "--single-process",
+    ],
+  });
+
+  const page = await browser.newPage();
+
+  const imageOptions: ImageOptions = {
+    height: 120,
+    width: 300,
+    quality: 70,
+  };
+  const randomFontFile = getRandomElement(font.files);
+  const fileBuffer = await fs.promises.readFile(randomFontFile.path);
+  const fontData = {
+    name: font.fontName,
+    extension: randomFontFile.extension,
+    base64Content: fileBuffer.toString("base64"),
+  };
+  const result = await generateImage(
+    page,
+    "سلام من یک متن تستی نسبتا بلند هستم!",
+    imageOptions,
+    fontData,
+    1
+  );
+})();
+*/

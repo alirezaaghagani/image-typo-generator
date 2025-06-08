@@ -10,8 +10,8 @@ export class TransformEffect extends Effect {
 
   getCss(context: EffectContext): StyleProperty[] | null {
     if (!this.shouldApply()) return null;
-    const verticalTranslate = (Math.random() - 0.5) * 55;
-    const horizontalTranslate = (Math.random() - 0.5) * 45;
+    const verticalTranslate = (Math.random() - 0.5) * 30;
+    const horizontalTranslate = (Math.random() - 0.5) * 20;
 
     return [
       {

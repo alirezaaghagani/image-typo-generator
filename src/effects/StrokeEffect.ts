@@ -15,9 +15,9 @@ export class StrokeEffect extends Effect {
 
   getCss(context: EffectContext): StyleProperty[] | null {
     const textColor = context.shared.textColor || "#000000";
-    const strokeSize = (Math.random() + 0.4) * 4 - 0.8;
+    const strokeSize = (Math.random() + 0.5) * 4 - 0.4;
     const amountOfShiftingColor =
-      Math.random() < 0.5 ? getRandomInt(-160, -40) : getRandomInt(40, 140);
+      Math.random() < 0.5 ? getRandomInt(-100, -40) : getRandomInt(40, 100);
     const strokeColor = getFamilyColor(textColor, amountOfShiftingColor);
 
     let textShadow = "";

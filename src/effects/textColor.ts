@@ -67,7 +67,7 @@ export class TextColorEffect extends Effect {
     switch (context.shared.backgroundType) {
       case "image":
         const imagePath = join(IMAGE_DIR, context.shared.backgroundImageUrl!);
-        const topColors = await getTopColors(imagePath, 3);
+        const topColors = await getTopColors(imagePath);
         color = getReadableTextColorFromTopColors(topColors);
         break;
       case "color":
