@@ -4,7 +4,6 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "server": "bun run server.ts",
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
     "build": "tsc",
@@ -12,7 +11,6 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/cli-progress": "^3.11.6",
     "@types/puppeteer": "^7.0.4",
     "@types/sharp": "^0.32.0",
     "@vibrant/types": "^4.0.0"
@@ -22,10 +20,9 @@
   },
   "dependencies": {
     "@types/node": "^22.15.29",
-    "cli-progress": "^3.12.0",
     "node-vibrant": "^4.0.3",
-    "p-limit": "^6.2.0",
     "puppeteer": "^24.10.0",
+    "puppeteer-cluster": "^0.24.0",
     "sharp": "^0.34.2"
   }
 }

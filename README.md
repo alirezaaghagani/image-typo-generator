@@ -9,12 +9,6 @@ bun install
 To run:
 
 ```bash
-bun run server
-```
-
-then in another terminal, run:
-
-```bash
 bun run start
 ```
 

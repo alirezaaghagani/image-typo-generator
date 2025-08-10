@@ -1,7 +1,4 @@
-import puppeteer, { Page } from "puppeteer";
 import fs from "fs";
-import cliProgress, { type SingleBar } from "cli-progress";
-import pLimit from "p-limit";
 import {
   loadSentences,
   getRandomInt,
@@ -10,6 +7,8 @@ import {
 } from "./utils.js";
 import { config } from "./config.js";
 import { generateImage, ImageOptions } from "./generateImage.js";
+import { Cluster } from "puppeteer-cluster";
+import { startImageServer } from "./server.js";
 
 (async function () {
   console.log("Starting text image generator... 📝✨");
@@ -23,11 +22,7 @@ import { generateImage, ImageOptions } from "./generateImage.js";
     );
     return;
   }
-  console.log(
-    `Found ${fontFiles.length} font families: ${fontFiles
-      .map((f) => f.fontName)
-      .join(", ")}`
-  );
+  console.log(`- Found ${fontFiles.length} font families.`);
 
   const sentences = await loadSentences(config.SENTENCES_FILE);
   if (sentences.length === 0) {
@@ -36,115 +31,48 @@ import { generateImage, ImageOptions } from "./generateImage.js";
     );
     return;
   }
-  console.log(`Loaded ${sentences.length} sentences.`);
+  console.log(`- Loaded ${sentences.length} sentences.`);
 
-  const multiBar = config.PROGRESS_BAR
-    ? new cliProgress.MultiBar(
-        { hideCursor: true },
-        cliProgress.Presets.shades_grey
-      )
-    : {
-        create: () => ({
-          increment: () => {},
-          stop: () => {},
-          remove: () => {},
-        }),
-        stop: () => {},
-        remove: () => {},
-      };
-  process.on("SIGINT", () => {
-    multiBar.stop();
-    console.log("\ninterrupted process! goodbye :(");
-    process.exit();
-  });
+  // start a server to host bg images
+  const server = startImageServer();
+  console.log(
+    `- Image server running at http://${server.hostname}:${server.port}/`
+  );
 
   try {
-    console.log("Launching Puppeteer browser... 🌐");
-    const browser = await puppeteer.launch({
-      // headless: false,
-      headless: "shell",
-      args: [
-        "--disable-features=CalculateNativeWinOcclusion",
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-background-timer-throttling",
-        "--font-render-hinting=none",
-        "--disable-gpu",
-        "--single-process",
-      ],
+    console.log(
+      `Launching ${config.CONCURRENT_TABS} concurrent browser tabs... 🌐`
+    );
+    const cluster: Cluster<{ font: (typeof fontFiles)[0] }> =
+      await Cluster.launch({
+        concurrency: Cluster.CONCURRENCY_CONTEXT,
+        maxConcurrency: config.CONCURRENT_TABS,
+        monitor: true,
+        timeout: 270000,
+        puppeteerOptions: {
+          headless: "shell",
+          args: [
+            "--disable-features=CalculateNativeWinOcclusion",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-background-timer-throttling",
+            "--font-render-hinting=none",
+            "--disable-gpu",
+            // "--single-process",
+          ],
+        },
+      });
+
+    process.on("SIGINT", async () => {
+      await cluster.close();
+      await server.stop();
+      process.stdout.write("\x1B[2J\x1B[3J\x1B[H");
+      console.log("\ninterrupted process! goodbye :(");
+      process.exit();
     });
 
-    const fontsBar = multiBar.create(
-      fontFiles.length,
-      0,
-      { name: " ... " },
-      {
-        barsize: 50,
-        format:
-          " {bar} | {name} | {value}/{total} | {duration_formatted} has passed! ETA: {eta}s",
-      }
-    );
-
-    const concurrency = config.CONCURRENT_TABS; // You can adjust this value
-    const limit = pLimit(concurrency);
-    // Create page pool
-    console.log(`Creating ${concurrency} browser pages...`);
-    const pagePool: Page[] = [];
-    for (let i = 0; i < concurrency; i++) {
-      pagePool.push(await browser.newPage());
-    }
-    let pageIndex = 0;
-
-    for (let fontIndex = 0; fontIndex < fontFiles.length; fontIndex++) {
-      // for (let fontIndex = 0; fontIndex < 1; fontIndex++) {
-      const font = fontFiles[fontIndex];
-      fontsBar.increment(undefined, { name: font.fontName });
-
-      const imagesBar = multiBar.create(config.IMAGES_PER_FONT, 0, undefined, {
-        clearOnComplete: true,
-        barsize: 30,
-        stopOnComplete: true,
-        format: " {bar} | {value}/{total} | {name}",
-      });
-      // ********************************************************************
-      const imagePromises = Array.from(
-        { length: config.IMAGES_PER_FONT },
-        (_, index) =>
-          limit(async () => {
-            const page = pagePool[pageIndex % pagePool.length];
-            pageIndex++;
-
-            const imageOptions: ImageOptions = {
-              height: getRandomInt(config.MIN_HEIGHT, config.MAX_HEIGHT),
-              width: getRandomInt(config.MIN_WIDTH, config.MAX_WIDTH),
-              quality: getRandomInt(config.MIN_QUALITY, config.MAX_QUALITY),
-            };
-            const randomFontFile = getRandomElement(font.files);
-            const fileBuffer = await fs.promises.readFile(randomFontFile.path);
-            const fontData = {
-              name: font.fontName,
-              extension: randomFontFile.extension,
-              base64Content: fileBuffer.toString("base64"),
-            };
-            // console.time(`generateImage ${index}`);
-            const result = await generateImage(
-              page,
-              getRandomElement(sentences),
-              imageOptions,
-              fontData,
-              index
-            );
-            // console.timeEnd(`generateImage ${index}`);
-            imagesBar.increment(undefined, { name: result });
-            return result;
-          })
-      );
-      await Promise.all(imagePromises);
-
-      // ***************************************************
-      /*
-      const page = pagePool[0];
+    await cluster.task(async ({ page, data: { font } }) => {
       for (let index = 0; index < config.IMAGES_PER_FONT; index++) {
         const imageOptions: ImageOptions = {
           height: getRandomInt(config.MIN_HEIGHT, config.MAX_HEIGHT),
@@ -159,7 +87,7 @@ import { generateImage, ImageOptions } from "./generateImage.js";
           base64Content: fileBuffer.toString("base64"),
         };
         // console.time(`generateImage ${index}`);
-        const result = await generateImage(
+        await generateImage(
           page,
           getRandomElement(sentences),
           imageOptions,
@@ -167,62 +95,26 @@ import { generateImage, ImageOptions } from "./generateImage.js";
           index
         );
         // console.timeEnd(`generateImage ${index}`);
-        imagesBar.increment(undefined, { name: result });
       }
-*/
-      multiBar.remove(imagesBar as SingleBar);
+    });
+
+    console.time(
+      `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster:`
+    );
+    // start the pool
+    for (let fontIndex = 0; fontIndex < fontFiles.length; fontIndex++) {
+      // ! for (let fontIndex = 0; fontIndex < 6; fontIndex++) {
+      const font = fontFiles[fontIndex];
+      cluster.queue({ font });
     }
-    multiBar.stop();
-    // Close all pages in the pool
-    for (const page of pagePool) {
-      await page.close();
-    }
-    await browser.close();
-    console.log("\n🎉 All done! Images generated in the 'output' directory.");
+    await cluster.idle();
+    console.timeEnd(
+      `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster:`
+    );
+    await cluster.close();
+
+    console.log("\nAll done! Images generated in the 'output' directory.");
   } catch (error) {
     console.error("An error occurred during the generation process:", error);
   }
 })();
-/*
-(async function () {
-  const fontFiles = getFontFamilies(config.FONT_DIR);
-  const font = fontFiles[0];
-  const browser = await puppeteer.launch({
-    headless: false,
-    // headless: "shell",
-    args: [
-      "--disable-features=CalculateNativeWinOcclusion",
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-background-timer-throttling",
-      "--font-render-hinting=none",
-      "--disable-gpu",
-      "--single-process",
-    ],
-  });
-
-  const page = await browser.newPage();
-
-  const imageOptions: ImageOptions = {
-    height: 120,
-    width: 300,
-    quality: 70,
-  };
-  const randomFontFile = getRandomElement(font.files);
-  const fileBuffer = await fs.promises.readFile(randomFontFile.path);
-  const fontData = {
-    name: font.fontName,
-    extension: randomFontFile.extension,
-    base64Content: fileBuffer.toString("base64"),
-  };
-  const result = await generateImage(
-    page,
-    "سلام من یک متن تستی نسبتا بلند هستم!",
-    imageOptions,
-    fontData,
-    1
-  );
-})();
-
-*/

@@ -20,15 +20,16 @@ export interface ImageOptions {
   height: number;
   quality: number;
 }
+export interface FontFileData {
+  name: string;
+  extension: string;
+  base64Content: string;
+}
 export async function generateImage(
   page: Page,
   sentence: string,
   imageOptions: ImageOptions,
-  font: {
-    name: string;
-    extension: string;
-    base64Content: string;
-  },
+  font: FontFileData,
   imageIndex: number
 ): Promise<string | null> {
   try {
@@ -77,7 +78,7 @@ export async function generateImage(
       .filter((s) => !s.property.startsWith("background"))
       .map((s) => `${s.property}: ${s.value};`)
       .join("\n");
-
+    // console.time(`setContent ${imageIndex}`);
     await page.setContent(
       `
       <html dir="rtl" lang="fa-IR">
@@ -112,27 +113,41 @@ export async function generateImage(
           </style>
         </head>
         <body><div id="textContainer">${finalText}</div></body>
+        <script defer>
+        (()=>{
+          const el = document.getElementById("textContainer")
+          const rect = el.getBoundingClientRect();
+          console.log(rect.y)
+          if(rect.y < -50){
+            console.log("bang!")
+            el.style.height = "100%";
+            el.style.width = "100%";
+          }
+
+          })()
+        </script>
       </html>
     `,
       { waitUntil: "domcontentloaded" }
     );
+    // console.timeEnd(`setContent ${imageIndex}`);
 
     const fontOutputDir = path.join(config.OUTPUT_DIR, font.name);
     if (!fs.existsSync(fontOutputDir)) {
       fs.mkdirSync(fontOutputDir, { recursive: true });
     }
-    const textRect = await page.evaluate(() => {
-      const el = document.getElementById("textContainer");
-      const rect = el!.getBoundingClientRect();
-      return {
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      };
-    });
+    // const textRect = await page.evaluate(() => {
+    //   const el = document.getElementById("textContainer");
+    //   const rect = el!.getBoundingClientRect();
+    //   return {
+    //     x: rect.x,
+    //     y: rect.y,
+    //     width: rect.width,
+    //     height: rect.height,
+    //   };
+    // });
 
-    // ? console.time(`screenshot ${imageIndex}`);
+    // console.time(`screenshot ${imageIndex}`);
     await page.screenshot({
       path: `${fontOutputDir}/image_${imageIndex + 1}.jpeg`,
       type: "jpeg",
@@ -152,9 +167,9 @@ export async function generateImage(
     return `${fontOutputDir}/image_${imageIndex + 1}.jpeg`;
   } catch (error) {
     console.error(
-      `Error generating image for font ${
+      `Error generating image number ${imageIndex} for font ${
         font.name
-      }, sentence "${sentence.substring(0, 20)}...":`,
+      }, sentence "${sentence.substring(0, 12)}...":`,
       error
     );
     return null;

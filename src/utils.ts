@@ -2,7 +2,22 @@ import fs from "fs";
 import { Vibrant } from "node-vibrant/node";
 import sharp from "sharp";
 import path from "path";
+import readline from "readline";
 
+export function waitForEnter(
+  message = "Press Enter to continue..."
+): Promise<void> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise((resolve) =>
+    rl.question(message, (answer) => {
+      rl.close();
+      resolve();
+    })
+  );
+}
 /**
  * Gets a random integer between min (inclusive) and max (inclusive).
  */
