@@ -43,12 +43,13 @@ import { startImageServer } from "./server.js";
     console.log(
       `Launching ${config.CONCURRENT_TABS} concurrent browser tabs... 🌐`
     );
-    const cluster: Cluster<{ font: (typeof fontFiles)[0] }> =
+    const cluster: Cluster<{ font: (typeof fontFiles)[0]; url: string }> =
       await Cluster.launch({
         concurrency: Cluster.CONCURRENCY_CONTEXT,
         maxConcurrency: config.CONCURRENT_TABS,
         monitor: true,
         timeout: 270000,
+        retryLimit: 3,
         puppeteerOptions: {
           headless: "shell",
           args: [
@@ -63,7 +64,7 @@ import { startImageServer } from "./server.js";
           ],
         },
       });
-
+    // ! i don't know why this part doesn't work and terminating process mid work makes it go wobelyboo!
     process.on("SIGINT", async () => {
       await cluster.close();
       await server.stop();
@@ -71,7 +72,8 @@ import { startImageServer } from "./server.js";
       console.log("\ninterrupted process! goodbye :(");
       process.exit();
     });
-
+    // cluster.on("taskerror", (err, data) => {
+    // });
     await cluster.task(async ({ page, data: { font } }) => {
       for (let index = 0; index < config.IMAGES_PER_FONT; index++) {
         const imageOptions: ImageOptions = {
@@ -99,17 +101,16 @@ import { startImageServer } from "./server.js";
     });
 
     console.time(
-      `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster:`
+      `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster.`
     );
     // start the pool
     for (let fontIndex = 0; fontIndex < fontFiles.length; fontIndex++) {
-      // ! for (let fontIndex = 0; fontIndex < 6; fontIndex++) {
       const font = fontFiles[fontIndex];
-      cluster.queue({ font });
+      cluster.queue({ font, url: font.fontName });
     }
     await cluster.idle();
     console.timeEnd(
-      `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster:`
+      `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster.`
     );
     await cluster.close();
     await server.stop();

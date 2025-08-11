@@ -40,6 +40,6 @@ export const config = {
     new RotationEffect(0.6),
     // new TransformEffect(0.4),
   ],
-  NUM_PROBABILITY: 0.15,
+  NUM_PROBABILITY: 0.12,
   // specialChars: ["،", "؛", "؟", "«", "»", "!", ";", ":", "'", '"', ","],
 };
