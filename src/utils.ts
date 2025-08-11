@@ -172,20 +172,15 @@ export async function loadSentences(filePath: string): Promise<string[]> {
   }
 }
 
-export function injectSpecialChars(
-  text: string,
-  specialChars: string[]
-): string {
-  // Decide how many chars to inject (1 to 3)
-  const numToInject = getRandomInt(1, 3);
-  let chars = text.split("");
-  for (let i = 0; i < numToInject; i++) {
-    const char = getRandomElement(specialChars);
-    // Random position (including start/end)
-    const pos = getRandomInt(0, chars.length);
-    chars.splice(pos, 0, char);
+export function generateRandomStringFromChars(chars: string[]): string {
+  const length = getRandomInt(1, 12);
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    const char = getRandomElement(chars);
+    result += char;
   }
-  return chars.join("");
+
+  return result;
 }
 
 /**

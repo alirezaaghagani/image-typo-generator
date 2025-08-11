@@ -1,7 +1,7 @@
 import { Page } from "puppeteer";
 import { EffectContext, StyleProperty } from "./effects/Effect.js";
 import { config } from "./config.js";
-import { getRandomInt, injectSpecialChars } from "./utils.js";
+import { generateRandomStringFromChars, getRandomInt } from "./utils.js";
 import path from "path";
 import fs from "fs";
 
@@ -65,10 +65,11 @@ export async function generateImage(
       config.MIN_FONT_SIZE,
       config.MAX_FONT_SIZE
     );
+    const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
     const finalText =
-      Math.random() < 0.7
-        ? sentence
-        : injectSpecialChars(sentence, config.specialChars);
+      Math.random() < config.NUM_PROBABILITY
+        ? generateRandomStringFromChars(persianDigits)
+        : sentence;
 
     const bodyStyles = activeStyles
       .filter((s) => s.property.startsWith("background"))

@@ -112,8 +112,9 @@ import { startImageServer } from "./server.js";
       `Generation of ${fontFiles.length} fonts(each ${config.IMAGES_PER_FONT} images) cluster:`
     );
     await cluster.close();
-
+    await server.stop();
     console.log("\nAll done! Images generated in the 'output' directory.");
+    process.exit();
   } catch (error) {
     console.error("An error occurred during the generation process:", error);
   }
