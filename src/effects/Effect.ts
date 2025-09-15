@@ -10,9 +10,9 @@ export interface EffectContext {
   shared: {
     imageFiles: string[];
     textColor?: string;
-    backgroundImageUrl?: string;
+    backgroundImageName?: string;
     backgroundColor?: string;
-    backgroundType?: "color" | "image";
+    debug: StyleProperty[];
   };
 }
 

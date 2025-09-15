@@ -2,9 +2,6 @@ import { Effect, StyleProperty, EffectContext } from "./Effect.js";
 import {
   getRandomHexColor,
   getRandomInt,
-  getRandomElement,
-  getComplementaryColor,
-  getFamilyColor,
   getAnalogousColor,
 } from "../utils.js";
 
@@ -25,8 +22,7 @@ export class BackgroundColorEffect extends Effect {
     const type = getRandomInt(1, 3);
     // const type = 2;
 
-    if (type === 1 || Math.random() < 0.4) {
-      // if (type === 1) {
+    if (type === 1 || Math.random() < 0.5) {
       // Solid color
       bgColor = color1;
     } else if (type === 2) {
@@ -39,7 +35,6 @@ export class BackgroundColorEffect extends Effect {
     }
 
     context.shared.backgroundColor = color1;
-    context.shared.backgroundType = "color";
 
     return [{ property: "background", value: bgColor }];
   }

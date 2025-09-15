@@ -20,6 +20,7 @@ export class StrokeEffect extends Effect {
       Math.random() < 0.5 ? getRandomInt(-100, -40) : getRandomInt(40, 100);
     const strokeColor = getFamilyColor(textColor, amountOfShiftingColor);
 
+    // a method to generate stroke for text with text-shadow property i found online
     let textShadow = "";
     for (var angle = 0; angle < 2 * Math.PI; angle += 1 / strokeSize) {
       if (textShadow !== "") {

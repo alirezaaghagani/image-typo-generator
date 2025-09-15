@@ -9,7 +9,7 @@ export function startImageServer() {
     port: 3000,
     fetch(req) {
       const url = new URL(req.url);
-      const imagePath = url.pathname.replace(/^\//, "");
+      const imagePath = decodeURIComponent(url.pathname.replace(/^\//, ""));
       const fullPath = join(IMAGE_DIR, imagePath);
 
       if (existsSync(fullPath)) {

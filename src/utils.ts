@@ -279,8 +279,22 @@ export async function getTopColors(
   maxImageDimension: number = 6
 ): Promise<string[]> {
   try {
+    // Get image dimensions to crop it
+    const metadata = await sharp(imagePath).metadata();
+    if (!metadata.width || !metadata.height) {
+      throw new Error("Could not read image dimensions.");
+    }
+    // Crop to center 60% region and resize to small buffer
+    const cropWidth = Math.floor(metadata.width * 0.5);
+    const cropHeight = Math.floor(metadata.height * 0.5);
+
+    // Calculate left/top offsets to center the crop
+    const left = Math.floor((metadata.width - cropWidth) / 2);
+    const top = Math.floor((metadata.height - cropHeight) / 2);
+
     // Read the image and resize it to a smaller buffer
     const resizedBuffer = await sharp(imagePath)
+      .extract({ left, top, width: cropWidth, height: cropHeight })
       .resize(maxImageDimension, maxImageDimension, {
         fit: sharp.fit.inside, // Maintain aspect ratio, don't enlarge
         withoutEnlargement: true, // Don't enlarge if original is smaller

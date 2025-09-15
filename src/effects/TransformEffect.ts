@@ -1,5 +1,4 @@
 import { Effect, StyleProperty, EffectContext } from "./Effect.js";
-import { getRandomInt } from "../utils.js";
 
 export class TransformEffect extends Effect {
   name = "Transform";
@@ -9,9 +8,8 @@ export class TransformEffect extends Effect {
   }
 
   getCss(context: EffectContext): StyleProperty[] | null {
-    if (!this.shouldApply()) return null;
     const verticalTranslate = (Math.random() - 0.5) * 30;
-    const horizontalTranslate = (Math.random() - 0.5) * 20;
+    const horizontalTranslate = (Math.random() - 0.5) * 35;
 
     return [
       {

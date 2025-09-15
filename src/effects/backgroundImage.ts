@@ -1,16 +1,11 @@
 import { Effect, StyleProperty, EffectContext } from "./Effect.js";
-import { getRandomInt, getRandomElement, getRandomFloat } from "../utils.js";
-import path from "path";
-
-// For this effect to work well, you'd need a source of background images.
-// We'll use placeholder URLs (like Unsplash Source or Lorem Picsum) for demonstration.
-// In a real scenario, you might have a local folder of images.
+import { getRandomElement } from "../utils.js";
+import { config } from "../config.js";
 
 export class BackgroundImageEffect extends Effect {
   name = "BackgroundImage";
 
   constructor(occurrenceProbability = 0.25) {
-    // Lower probability as it can be dominant
     super(occurrenceProbability);
   }
 
@@ -18,13 +13,14 @@ export class BackgroundImageEffect extends Effect {
     // Get image files from context
     const imageFiles: string[] = context.shared?.imageFiles || [];
 
-    if (!imageFiles.length) return null;
+    if (!imageFiles.length)
+      throw new Error(
+        `no image for bgImage is provided in ${config.IMAGE_DIR}`
+      );
 
     // Pick a random image
     const randomImage = getRandomElement(imageFiles);
-    // Use a relative path for browser (assuming assets/images is public)
     const imageUrl = `http://localhost:3000/${randomImage}`;
-    // const imageUrl = `http://localhost:3000/photo-1552847883-d6001a3a97c4.jpg`;
 
     const backgroundStyles: StyleProperty[] = [
       { property: "background-image", value: `url('${imageUrl}')` },
@@ -33,9 +29,7 @@ export class BackgroundImageEffect extends Effect {
         value: "cover",
       },
     ];
-    context.shared.backgroundType = "image";
-    context.shared.backgroundImageUrl = randomImage;
-    // context.shared.backgroundImageUrl = "photo-1552847883-d6001a3a97c4.jpg";
+    context.shared.backgroundImageName = randomImage;
 
     return backgroundStyles;
   }

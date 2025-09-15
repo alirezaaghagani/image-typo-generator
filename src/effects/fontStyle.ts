@@ -10,7 +10,6 @@ export class FontStyleEffect extends Effect {
   }
 
   getCss(context: EffectContext): StyleProperty[] | null {
-    if (!this.shouldApply()) return null;
     return [{ property: "font-style", value: getRandomElement(this.styles) }];
   }
 }

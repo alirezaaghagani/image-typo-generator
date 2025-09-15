@@ -9,20 +9,18 @@ export class TextShadowEffect extends Effect {
   }
 
   getCss(context: EffectContext): StyleProperty[] | null {
-    if (!this.shouldApply()) return null;
-
     const numShadows = getRandomInt(1, 3);
     const shadows: string[] = [];
 
     for (let i = 0; i < numShadows; i++) {
-      const offsetX = getRandomInt(-5, 5);
-      const offsetY = getRandomInt(-5, 5);
-      const blurRadius = getRandomInt(0, 14);
+      const offsetX = getRandomInt(-10, 10);
+      const offsetY = getRandomInt(-10, 10);
+      const blurRadius = getRandomInt(0, 16);
       const color =
         getRandomHexColor() +
         (Math.random() < 0.7
           ? getRandomInt(10, 99).toString(16).padStart(2, "0")
-          : ""); // Optional alpha
+          : "");
       shadows.push(`${offsetX}px ${offsetY}px ${blurRadius}px ${color}`);
     }
 
