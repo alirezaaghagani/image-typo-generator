@@ -39,6 +39,8 @@ export async function generateImage(
 
     await page.setViewport({ width: imageWidth, height: imageHeight });
 
+    // effect context is needed so each effect can be aware of other effects so it can change its behavior based on them.
+    // (for example: text color effect should be aware of background color or image to determine a suitable color for text)
     const effectContext: EffectContext = {
       imageWidth,
       imageHeight,
@@ -50,6 +52,7 @@ export async function generateImage(
 
     const activeStyles: StyleProperty[] = [];
 
+    // determine the what effects should apply for this image by rolling dice (effect.shouldApply())
     // console.time(`effects ${imageIndex}`);
     for (const effect of availableEffects) {
       if (effect.shouldApply()) {
@@ -61,14 +64,12 @@ export async function generateImage(
     }
     // console.timeEnd(`effects ${imageIndex}`);
 
-    let defaultFontSizePx = getRandomInt(
-      config.MIN_FONT_SIZE,
-      config.MAX_FONT_SIZE
-    );
+    let fontSizePx = getRandomInt(config.MIN_FONT_SIZE, config.MAX_FONT_SIZE);
+    // choose if final image should be a text or digits
     const persianDigits = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
     const finalText =
       Math.random() < config.NUM_PROBABILITY
-        ? generateRandomStringFromChars(persianDigits)
+        ? generateRandomStringFromChars(persianDigits, 14)
         : sentence;
 
     const bodyStyles = activeStyles
@@ -102,7 +103,7 @@ export async function generateImage(
             }
             #textContainer {
               font-family: "${font.name}", sans-serif;
-              font-size: ${defaultFontSizePx}px;
+              font-size: ${fontSizePx}px;
               text-align: center; /* Or make this random too */
               overflow-wrap: break-word;
               word-break: break-word;
@@ -137,16 +138,6 @@ export async function generateImage(
     if (!fs.existsSync(fontOutputDir)) {
       fs.mkdirSync(fontOutputDir, { recursive: true });
     }
-    // const textRect = await page.evaluate(() => {
-    //   const el = document.getElementById("textContainer");
-    //   const rect = el!.getBoundingClientRect();
-    //   return {
-    //     x: rect.x,
-    //     y: rect.y,
-    //     width: rect.width,
-    //     height: rect.height,
-    //   };
-    // });
 
     // console.time(`screenshot ${imageIndex}`);
     await page.screenshot({
@@ -154,17 +145,9 @@ export async function generateImage(
       type: "jpeg",
       quality: imageQuality,
       optimizeForSpeed: true,
-      //   clip: textRect,
     });
     // console.timeEnd(`screenshot ${imageIndex}`);
 
-    // console.log(
-    //   `🖼️ Generated: ${`${fontOutputDir}/image_${
-    //     imageIndex + 1
-    //   }.jpeg`} (${imageWidth}x${imageHeight}, Q:${imageQuality}, Font: ${
-    //     font.name
-    //   }, Size: ${defaultFontSizePx.toFixed(1)}px)`
-    // );
     return `${fontOutputDir}/image_${imageIndex + 1}.jpeg`;
   } catch (error) {
     console.error(

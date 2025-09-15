@@ -172,8 +172,11 @@ export async function loadSentences(filePath: string): Promise<string[]> {
   }
 }
 
-export function generateRandomStringFromChars(chars: string[]): string {
-  const length = getRandomInt(1, 12);
+export function generateRandomStringFromChars(
+  chars: string[],
+  maxLength: number = 12
+): string {
+  const length = getRandomInt(2, maxLength);
   let result = "";
   for (let i = 0; i < length; i++) {
     const char = getRandomElement(chars);
@@ -299,10 +302,8 @@ export async function getTopColors(
 }
 
 /**
- * Returns a dynamic hex color for text that contrasts well with the provided top colors from an image.
- * It tries to pick one of the input colors that provides good contrast. If none do, it falls back to
- * pure black or pure white for guaranteed readability.
- *
+ * Returns a dynamic hex color for text that contrasts well with the provided top colors (in order) from an image.
+ * It tries to find best color that provides good contrast for given background dominant color.
  * @param topHexColors An array of 3 hex color strings (e.g., ["#RRGGBB"]).
  * @returns A single hex color string for text.
  */
@@ -441,8 +442,8 @@ export function getReadableTextColorFromTopColors(
       0
     ) / totalWeight;
 
-  const MIN_CONTRAST_RATIO = 4.5; // WCAG AA standard
-  const MIN_COLOR_DISTANCE = 50; // Minimum RGB distance to avoid similar colors
+  const MIN_CONTRAST_RATIO = 3.5; // WCAG AA standard
+  const MIN_COLOR_DISTANCE = 70; // Minimum RGB distance to avoid similar colors
 
   // Generate candidate colors
   const candidates: Array<{
