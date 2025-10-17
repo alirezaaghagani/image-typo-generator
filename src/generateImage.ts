@@ -47,6 +47,7 @@ export async function generateImage(
       fontFamily: font.name,
       shared: {
         imageFiles, // Pass the array of image filenames
+        debug: [],
       },
     };
 
